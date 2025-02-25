@@ -4,3 +4,4 @@ python-dotenv
 streamlit
 python-docx
 PyPDF2
+fpdf
