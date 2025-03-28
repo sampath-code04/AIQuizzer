@@ -2,7 +2,6 @@ import streamlit as st
 from db import db
 from datetime import datetime
 
-
 # MongoDB collections
 quiz_collection = db["quizzes"]  # Quiz collection
 attempts_collection = db["quiz_attempts"]  # Quiz attempts collection
@@ -12,7 +11,6 @@ if "selected_quiz" not in st.session_state:
     st.session_state.selected_quiz = None
 if "submitted" not in st.session_state:
     st.session_state.submitted = False
-
 
 # Function to reset the quiz attempt state
 def reset_quiz_state():
@@ -90,9 +88,14 @@ def attempt_quiz(quiz):
         st.error("No questions found in this quiz.")
         return
 
+    # Initialize counters
+    correct_answers = 0
+    total_answers = 0
     answers = []
+
     if st.button("Stop Quiz"):
         reset_quiz_state()
+
     with st.form("quiz_form"):
         for idx, mcq in enumerate(mcqs):
             st.subheader(f"Question {idx + 1}")
@@ -119,8 +122,14 @@ def attempt_quiz(quiz):
             
             answers.append({
                 "question": question_text,
-                "selected_answer": selected_answer
+                "selected_answer": selected_answer,
+                "correct_answer": mcq.get("answer","")
             })
+
+            if selected_answer == mcq.get("answer"):
+                correct_answers += 1
+
+            total_answers += 1
 
         submit_button = st.form_submit_button("Submit Answers")
     
@@ -132,10 +141,12 @@ def attempt_quiz(quiz):
                     "attempted_at": datetime.now(),
                     "attempted_by": st.session_state.username,
                     "answers": answers,
+                    "correct_answers_count": correct_answers,
+                    "total_questions": total_answers  # Use total_answers here
                 }
                 result = attempts_collection.insert_one(attempt_data)  # Insert into MongoDB
                 if result.inserted_id:
-                    st.success("Your answers have been submitted successfully!")
+                    st.toast("Your answers have been submitted successfully!", icon='🎉')
                     reset_quiz_state() 
                 else:
                     st.error("Failed to submit your answers. Please try again.")
