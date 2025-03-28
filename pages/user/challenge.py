@@ -308,7 +308,7 @@ def results_tab():
 
                             
     else:
-        st.warning("No completed challenges found.")
+        st.info("No completed challenges found.")
 
 
 
